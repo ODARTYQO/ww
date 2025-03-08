@@ -1,0 +1,9 @@
+
+PyQt5
+pyluach
+beautifulsoup4
+requests
+certifi
+
+logging
+urllib3

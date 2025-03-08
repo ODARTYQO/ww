@@ -1,4 +1,4 @@
-from logging import info
+1from logging import info
 import sys
 import ctypes
 from PyQt5 import QtGui, QtCore, QtWidgets

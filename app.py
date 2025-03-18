@@ -8,6 +8,7 @@ import asyncio
 import pandas as pd
 import re
 
+
 # הגדרת מחלקות בסיסיות
 class Contact:
     def __init__(self, name, phone, email="", group=""):
@@ -42,6 +43,7 @@ class LoginManager:
         self.password_field = None
         self.error_text = None
         self.on_login_success = None
+        self.temp_notes = {}
 
     def create_login_page(self, page, on_login_success):
         self.page = page
@@ -283,7 +285,10 @@ class AppManager:
         self.groups = []
         self.current_edit_contact = None
         self.login_manager = None
-        
+        self.message_banner = None
+        self.temp_notes = {}
+        self.app_icon = "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"
+         
         # משתני ממשק
         self.contacts_list_view = None
         self.events_grid_view = None
@@ -305,7 +310,11 @@ class AppManager:
 
     def initialize_app(self, page: ft.Page):
         self.login_manager = LoginManager()
+        page.window_icon = ft.icons.PERSON 
         self.login_manager.create_login_page(page, self.setup_main_page)
+        
+        
+        page.update()
 
     def setup_main_page(self):
         # הגדרת המסך הראשי
@@ -335,6 +344,45 @@ class AppManager:
             ),
             self.tabs
         )
+        # יצירת באנר להודעות
+        self.message_banner = ft.Card(
+            visible=False,
+            content=ft.Container(
+                bgcolor=ft.colors.WHITE,
+                padding=10,
+                content=ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Row(
+                            spacing=10,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                            controls=[
+                                ft.Icon(ft.icons.INFO, size=24),
+                                ft.Text("", size=16, weight=ft.FontWeight.BOLD)
+                            ]
+                        ),
+                        ft.IconButton(
+                            icon=ft.icons.CLOSE,
+                            icon_size=20,
+                            on_click=lambda _: self.hide_message()
+                        )
+                    ]
+                )
+            )
+        )
+        
+        # הוספת הבאנר בתוך Container עם padding
+        banner_container = ft.Container(
+            content=self.message_banner,
+            
+            margin=ft.margin.only(bottom=10),
+            padding=ft.padding.all(10)
+        )
+        
+        # הוספת הבאנר לתחילת הדף
+        self.login_manager.page.controls.insert(0, banner_container)
+        self.login_manager.page.update()
         self.login_manager.page.update()
 
     def create_contact_card(self, contact):
@@ -1198,7 +1246,7 @@ class AppManager:
             self.show_message(f"שגיאה בעיבוד הקובץ: {str(e)}", ft.Colors.RED)
         
     def manage_event(self, event):
-        """מנהל את תצוגת האירוע ומשתתפיו"""
+        """מנהל את תצוגת האירוע ומשתתפיו בצורה מאורגנת ונוחה יותר"""
         if not event or not self.login_manager or not self.login_manager.page:
             return
 
@@ -1220,122 +1268,444 @@ class AppManager:
                     self.login_manager.page.update()
                     return
 
-        # יצירת הרשתות
-        participants_grid = ft.GridView(
-            expand=True,
-            runs_count=2,
-            max_extent=300,
-            child_aspect_ratio=2.0,
-            spacing=10,
-            run_spacing=10,
-            padding=20,
-            height=400
+        # יצירת שדות עריכה לאירוע
+        edit_event_title = ft.TextField(
+            value=event.title,
+            label="כותרת האירוע",
+            width=200,
+            text_align="right"
+        )
+        
+        edit_event_date = ft.TextField(
+            value=event.date,
+            label="תאריך",
+            width=150,
+            text_align="right"
+        )
+        
+        edit_event_time = ft.TextField(
+            value=event.time,
+            label="שעה",
+            width=100,
+            text_align="right"
+        )
+        
+        edit_event_location = ft.TextField(
+            value=event.location,
+            label="מיקום",
+            width=150,
+            text_align="right"
         )
 
-        available_contacts_grid = ft.GridView(
-            expand=True,
-            runs_count=2,
-            max_extent=300,
-            child_aspect_ratio=2.0,
-            spacing=10,
-            run_spacing=10,
-            padding=20,
-            height=400
+        # יצירת שדה החיפוש
+        search_field = ft.TextField(
+            label="חיפוש אנשי קשר",
+            prefix_icon=ft.Icons.SEARCH,
+            width=300,
+            border_color=ft.Colors.BLUE,
+            focused_border_color=ft.Colors.BLUE,
+            height=40
         )
 
-        def update_event_participants():
-            """עדכון רשימת המשתתפים"""
-            if not participants_grid or not available_contacts_grid:
-                return
+        # יצירת רשימות משתתפים
+        confirmed_participants_list = ft.ListView(
+            expand=True,
+            spacing=10,
+            height=300,
+            width=350
+        )
+        
+        pending_participants_list = ft.ListView(
+            expand=True,
+            spacing=10,
+            height=300,
+            width=350
+        )
+        
+        available_contacts_list = ft.ListView(
+            expand=True,
+            spacing=10,
+            height=300,
+            width=350
+        )
 
-            # עדכון רשימת המשתתפים
-            participants_cards = []
-            
-            # משתתפים מאושרים
-            for participant in event.participants:
-                if participant:
-                    card = ft.Card(
-                        content=ft.Container(
-                            content=ft.Column([
-                                ft.Text(participant.name, size=16, weight=ft.FontWeight.BOLD),
-                                ft.Text(f"טלפון: {participant.phone}"),
-                                ft.Text("מאושר", color=ft.colors.GREEN)
-                            ]),
-                            padding=10
-                        )
+        def save_event_changes(e):
+            event.title = edit_event_title.value
+            event.date = edit_event_date.value
+            event.time = edit_event_time.value
+            event.location = edit_event_location.value
+            self.update_views()
+            self.save_data()
+            self.show_message("פרטי האירוע עודכנו בהצלחה", ft.Colors.GREEN)
+
+        def update_participants_lists():
+            # עדכון רשימת משתתפים מאושרים
+            confirmed_participants_list.controls = [
+                ft.Card(
+                    content=ft.Container(
+                        content=ft.Row([
+                            ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN),
+                            ft.Column([
+                                ft.Text(p.name, size=16, weight=ft.FontWeight.BOLD),
+                                ft.Text(f"טלפון: {p.phone}")
+                            ], expand=True),
+                            ft.IconButton(
+                                icon=ft.Icons.REMOVE_CIRCLE,
+                                icon_color=ft.Colors.RED,
+                                tooltip="הסר מהאירוע",
+                                on_click=lambda _, participant=p: remove_participant(participant)
+                            )
+                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        padding=10
                     )
-                    participants_cards.append(card)
-
-            # משתתפים ממתינים
-            for participant in event.pending_participants:
-                if participant:
-                    card = ft.Card(
-                        content=ft.Container(
-                            content=ft.Column([
-                                ft.Text(participant.name, size=16, weight=ft.FontWeight.BOLD),
-                                ft.Text(f"טלפון: {participant.phone}"),
-                                ft.Text("ממתין לאישור", color=ft.colors.ORANGE)
-                            ]),
-                            padding=10
-                        )
-                    )
-                    participants_cards.append(card)
-
-            # עדכון הרשת
-            participants_grid.controls = participants_cards
-            
-            # עדכון רשימת אנשי הקשר הזמינים
-            available_contacts = [
-                contact for contact in self.contacts 
-                if contact and contact not in event.participants 
-                and contact not in event.pending_participants
+                )
+                for p in event.participants
             ]
-
-            available_cards = []
-            for contact in available_contacts:
-                card = ft.Card(
+            #
+            pending_participants_list.controls = [
+                ft.Card(
                     content=ft.Container(
                         content=ft.Column([
-                            ft.Text(contact.name, size=16, weight=ft.FontWeight.BOLD),
-                            ft.Text(f"טלפון: {contact.phone}")
+                            ft.Row([
+                                ft.Icon(ft.Icons.PENDING, color=ft.Colors.ORANGE),
+                                ft.Column([
+                                    ft.Text(p.name, size=16, weight=ft.FontWeight.BOLD),
+                                    ft.Text(f"טלפון: {p.phone}"),
+                                    ft.Text(
+                                        f"הערה: {event.pending_notes.get(p.name, '')}",
+                                        color=ft.colors.GREY,
+                                        italic=True,
+                                        visible=bool(event.pending_notes.get(p.name, ''))
+                                    )
+                                ], expand=True),
+                                ft.Row([
+                                    ft.IconButton(
+                                        icon=ft.Icons.EDIT_NOTE,
+                                        icon_color=ft.Colors.BLUE,
+                                        tooltip="הוסף/ערוך הערה",
+                                        data=p,
+                                        # שינוי כאן - הוספת lambda עם e
+                                        on_click=lambda e, participant=p: toggle_note_field(e, participant)
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.Icons.CHECK,
+                                        icon_color=ft.colors.GREEN,
+                                        tooltip="אשר השתתפות",
+                                        on_click=lambda _, participant=p: confirm_participant(participant)
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.icons.CANCEL,
+                                        icon_color=ft.colors.RED,
+                                        tooltip="דחה השתתפות",
+                                        on_click=lambda _, participant=p: reject_participant(participant)
+                                    )
+                                ])
+                            ]),
+                            
+                            # אזור ההערות
+                            ft.Container(
+                                visible=False,
+                                content=ft.Column([
+                                    ft.TextField(
+                                        label="הערה למשתתף",
+                                        value=event.pending_notes.get(p.name, ""),
+                                        multiline=True,
+                                        min_lines=2,
+                                        max_lines=3,
+                                        text_align="right",
+                                        data=p,
+                                        on_change=lambda e, participant=p: update_temp_note(e, participant)
+                                    ),
+                                    ft.Row([
+                                        ft.ElevatedButton(
+                                            text="שמור",
+                                            icon=ft.icons.SAVE,
+                                            on_click=lambda e, participant=p: save_note(e, participant)
+                                        ),
+                                        ft.OutlinedButton(
+                                            text="בטל",
+                                            icon=ft.icons.CANCEL,
+                                            on_click=lambda e, participant=p: cancel_note(e, participant)
+                                        )
+                                    ], alignment=ft.MainAxisAlignment.END)
+                                ]),
+                                key=f"note_container_{p.name}",
+                                padding=10
+                            )
                         ]),
                         padding=10
                     )
                 )
-                available_cards.append(card)
-
-            available_contacts_grid.controls = available_cards
+                for p in event.pending_participants
+            ]
             self.login_manager.page.update()
+        
+        # עדכון רשימת אנשי קשר זמינים
+            available_contacts = [
+                c for c in self.contacts 
+                if c not in event.participants and c not in event.pending_participants
+            ]
+            
+            available_contacts_list.controls = [
+                ft.Card(
+                    content=ft.Container(
+                        content=ft.Row([
+                            ft.Icon(ft.Icons.PERSON),
+                            ft.Column([
+                                ft.Text(contact.name, size=16, weight=ft.FontWeight.BOLD),
+                                ft.Text(f"טלפון: {contact.phone}")
+                            ], expand=True),
+                            ft.IconButton(
+                                icon=ft.Icons.ADD_CIRCLE,
+                                icon_color=ft.Colors.BLUE,
+                                tooltip="הוסף לאירוע",
+                                on_click=lambda _, c=contact: add_participant(c)
+                            )
+                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        padding=10
+                    )
+                )
+                for contact in available_contacts
+            ]
+            
+            self.login_manager.page.update()
+
+
+
+        def toggle_note_field(e, participant):
+            """מחליף את מצב התצוגה של שדה ההערה"""
+            for card in pending_participants_list.controls:
+                note_container = next(
+                    (cont for cont in card.content.content.controls 
+                     if isinstance(cont, ft.Container) and 
+                     hasattr(cont, 'key') and 
+                     cont.key == f"note_container_{participant.name}"),
+                    None
+                )
+                if note_container:
+                    note_container.visible = not note_container.visible
+                    # אם פותחים את שדה העריכה, מעתיקים את ההערה הנוכחית לזיכרון הזמני
+                    if note_container.visible:
+                        self.temp_notes[participant.name] = event.pending_notes.get(participant.name, "")
+                    break
+            self.login_manager.page.update()
+
+        def update_temp_note(e, participant):
+            """שומר את ההערה באופן זמני בזמן הקלדה"""
+            self.temp_notes[participant.name] = e.control.value
+
+        def save_note(e, participant):
+            """שומר את ההערה באופן סופי"""
+            if participant.name in self.temp_notes:
+                note_text = self.temp_notes[participant.name]
+                if note_text.strip():
+                    event.pending_notes[participant.name] = note_text
+                else:
+                    event.pending_notes.pop(participant.name, None)
+                self.temp_notes.pop(participant.name, None)
+                
+                # עדכון התצוגה וסגירת שדה העריכה
+                update_participants_lists()
+                self.save_data()
+
+        def cancel_note(e, participant):
+            """מבטל את העריכה"""
+            self.temp_notes.pop(participant.name, None)
+            toggle_note_field(e, participant)
+    
+        def confirm_participant(participant):
+            """עדכון לאישור משתתף"""
+            event.pending_participants.remove(participant)
+            event.participants.append(participant)
+            event.pending_notes.pop(participant.name, None)  # מוחק את ההערה אם קיימת
+            update_participants_lists()
+            self.save_data()
+            self.show_message(f"אושרה השתתפותו של {participant.name}", ft.Colors.GREEN)
+
+        def reject_participant(participant):
+            """עדכון לדחיית משתתף"""
+            event.pending_participants.remove(participant)
+            event.pending_notes.pop(participant.name, None)  # מוחק את ההערה אם קיימת
+            update_participants_lists()
+            self.save_data()
+            self.show_message(f"נדחתה השתתפותו של {participant.name}", ft.Colors.RED)
+
+        def reject_participant(participant):
+            """עדכון לדחיית משתתף - מוחק גם את ההערה אם קיימת"""
+            event.pending_participants.remove(participant)
+            # מחיקת ההערה אם קיימת
+            event.pending_notes.pop(participant.name, None)
+            update_participants_lists()
+            self.save_data()
+            self.show_message(f"נדחתה השתתפותו של {participant.name}", ft.Colors.RED)            
+
+        def add_participant(contact):
+            event.pending_participants.append(contact)
+            update_participants_lists()
+            self.save_data()
+            self.show_message(f"{contact.name} נוסף לרשימת הממתינים", ft.Colors.BLUE)
+
+        def confirm_participant(participant):
+            event.pending_participants.remove(participant)
+            event.participants.append(participant)
+            update_participants_lists()
+            self.save_data()
+            self.show_message(f"אושרה השתתפותו של {participant.name}", ft.Colors.GREEN)
+
+        def reject_participant(participant):
+            event.pending_participants.remove(participant)
+            update_participants_lists()
+            self.save_data()
+            self.show_message(f"נדחתה השתתפותו של {participant.name}", ft.Colors.RED)
+
+        def remove_participant(participant):
+            event.participants.remove(participant)
+            update_participants_lists()
+            self.save_data()
+            self.show_message(f"{participant.name} הוסר מהאירוע", ft.Colors.RED)
+
+        # פונקציית סינון אנשי קשר
+        def filter_available_contacts(search_text: str):
+            if not search_text:
+                available_contacts = [
+                    c for c in self.contacts 
+                    if c not in event.participants and c not in event.pending_participants
+                ]
+            else:
+                available_contacts = [
+                    c for c in self.contacts 
+                    if c not in event.participants and c not in event.pending_participants
+                    and (search_text.lower() in c.name.lower() or
+                         search_text in c.phone or
+                         (hasattr(c, 'email') and c.email and search_text.lower() in c.email.lower()))
+                ]
+            
+            available_contacts_list.controls = [
+                ft.Card(
+                    content=ft.Container(
+                        content=ft.Row([
+                            ft.Icon(ft.Icons.PERSON),
+                            ft.Column([
+                                ft.Text(contact.name, size=16, weight=ft.FontWeight.BOLD),
+                                ft.Text(f"טלפון: {contact.phone}")
+                            ], expand=True),
+                            ft.IconButton(
+                                icon=ft.Icons.ADD_CIRCLE,
+                                icon_color=ft.Colors.BLUE,
+                                tooltip="הוסף לאירוע",
+                                on_click=lambda _, c=contact: add_participant(c)
+                            )
+                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        padding=10
+                    )
+                )
+                for contact in available_contacts
+            ]
+            self.login_manager.page.update()
+
+        # הגדרת פונקציית החיפוש לשדה החיפוש
+        search_field.on_change = lambda e: filter_available_contacts(e.control.value)
 
         # יצירת תוכן הכרטיסייה
         event_content = ft.Column([
+            # כותרת וכפתור סגירה
             ft.Row([
-                ft.Text(event.title, size=24, weight=ft.FontWeight.BOLD),
+                ft.Text("ניהול אירוע", size=30, weight=ft.FontWeight.BOLD),
                 ft.IconButton(
-                    icon=ft.icons.CLOSE,
-                    icon_color="red",
+                    icon=ft.Icons.CLOSE,
+                    icon_color=ft.Colors.RED,
                     tooltip="סגור",
                     on_click=lambda e: self.close_event_tab(event)
                 )
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-            ft.Divider(),
-            ft.Text(f"תאריך: {event.date}"),
-            ft.Text(f"שעה: {event.time}"),
-            ft.Text(f"מיקום: {event.location}"),
-            ft.Divider(),
-            ft.Text("משתתפים באירוע:", size=20, weight=ft.FontWeight.BOLD),
-            participants_grid,
-            ft.Divider(),
-            ft.Text("הוסף משתתפים:", size=20, weight=ft.FontWeight.BOLD),
-            available_contacts_grid
+            
+            # חלק עליון - פרטי האירוע
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("פרטי האירוע", size=20, weight=ft.FontWeight.BOLD),
+                    ft.Row([
+                        edit_event_title,
+                        edit_event_date,
+                        edit_event_time,
+                        edit_event_location,
+                        ft.IconButton(
+                            icon=ft.Icons.SAVE,
+                            icon_color=ft.Colors.BLUE,
+                            tooltip="שמור שינויים",
+                            on_click=save_event_changes
+                        ),
+                    ], spacing=10),
+                ]),
+                padding=20,
+                border=ft.border.all(1, ft.Colors.BLACK12),
+                border_radius=10,
+                margin=ft.margin.only(bottom=20)
+            ),
+            
+            # חלק תחתון - ניהול משתתפים
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("ניהול משתתפים", size=20, weight=ft.FontWeight.BOLD),
+                    # שדה החיפוש
+                    ft.Container(
+                        content=search_field,
+                        alignment=ft.alignment.center_left,
+                        margin=ft.margin.only(bottom=10, left=0),
+                    ),
+                    ft.Row([
+                        # משתתפים מאושרים
+                        ft.Column([
+                            ft.Container(
+                                content=ft.Text("משתתפים מאושרים", weight=ft.FontWeight.BOLD),
+                                bgcolor=ft.Colors.GREEN_50,
+                                padding=10,
+                                border_radius=5
+                            ),
+                            confirmed_participants_list
+                        ], expand=True),
+                        
+                        # משתתפים ממתינים
+                        ft.Column([
+                            ft.Container(
+                                content=ft.Text("ממתינים לאישור", weight=ft.FontWeight.BOLD),
+                                bgcolor=ft.Colors.ORANGE_50,
+                                padding=10,
+                                border_radius=5
+                            ),
+                            pending_participants_list
+                        ], expand=True),
+                        
+                        # הוספת משתתפים חדשים
+                        ft.Column([
+                            ft.Container(
+                                content=ft.Text("הוסף משתתפים", weight=ft.FontWeight.BOLD),
+                                bgcolor=ft.Colors.BLUE_50,
+                                padding=10,
+                                border_radius=5
+                            ),
+                            available_contacts_list
+                        ], expand=True)
+                    ], spacing=20, alignment=ft.MainAxisAlignment.START)
+                ]),
+                padding=20,
+                border=ft.border.all(1, ft.Colors.BLACK12),
+                border_radius=10,
+                expand=True
+            )
         ])
 
-        # יצירת כרטיסייה חדשה
+        # יצירת הכרטיסייה והוספתה
         new_tab = ft.Tab(
             text=event_tab_text,
-            content=ft.Container(
-                content=event_content,
-                padding=20
+            content=ft.Column(
+                [
+                    ft.Container(
+                        content=event_content,
+                        padding=20
+                    )
+                ],
+                scroll=ft.ScrollMode.AUTO,
+                expand=True
             )
         )
 
@@ -1343,9 +1713,13 @@ class AppManager:
         self.tabs.tabs.append(new_tab)
         self.tabs.selected_index = len(self.tabs.tabs) - 1
         
-        # עדכון ראשוני של המשתתפים
-        update_event_participants()
-
+        # עדכון ראשוני של הרשימות
+        update_participants_lists()
+        filter_available_contacts("")
+        
+        # עדכון הדף
+        self.login_manager.page.update()
+        
     def close_event_tab(self, event):
         """סוגר את כרטיסיית האירוע"""
         if self.tabs and self.tabs.tabs:
@@ -1429,13 +1803,82 @@ class AppManager:
         self.login_manager.page.update()
 
     def show_message(self, message, color):
-        self.login_manager.page.snack_bar = ft.SnackBar(
-            content=ft.Text(message),
-            bgcolor=color
+        """
+        מציג הודעה למשתמש בתחתית המסך עם רוחב דינמי
+        """
+        if not self.login_manager or not self.login_manager.page:
+            return
+
+        # יצירת הודעה בתחתית המסך
+        message_container = ft.Container(
+            content=ft.Card(
+                content=ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Row(
+                                [
+                                    ft.Icon(
+                                        ft.icons.CHECK_CIRCLE if color == ft.colors.GREEN else
+                                        ft.icons.ERROR if color == ft.colors.RED else
+                                        ft.icons.WARNING if color == ft.colors.ORANGE else
+                                        ft.icons.INFO,
+                                        color=color,
+                                        size=24
+                                    ),
+                                    ft.Text(
+                                        message,
+                                        size=16,
+                                        weight=ft.FontWeight.BOLD,
+                                        color=color,
+                                        expand=False  # מונע מהטקסט להתרחב מעבר לגודלו
+                                    ),
+                                    ft.IconButton(
+                                        icon=ft.icons.CLOSE,
+                                        icon_color=color,
+                                        on_click=lambda e: self.close_message(message_container)
+                                    )
+                                ],
+                                spacing=10,  # מרווח בין האלמנטים
+                                alignment=ft.MainAxisAlignment.START,  # יישור לשמאל
+                                tight=True  # גורם לשורה להיות בדיוק ברוחב התוכן שלה
+                            )
+                        ],
+                        horizontal_alignment=ft.CrossAxisAlignment.START
+                    ),
+                    padding=10
+                )
+            ),
+            bottom=30,
+            left=20,
+            right=None,
+            padding=0
         )
-        self.login_manager.page.snack_bar.open = True
+
+        # הוספת ההודעה לדף
+        self.login_manager.page.overlay.append(message_container)
         self.login_manager.page.update()
 
+        # סגירה אוטומטית אחרי 3 שניות
+        import threading
+        threading.Timer(3.0, lambda: self.close_message(message_container)).start()
+
+    def close_message(self, message_container):
+        """
+        סוגר את הודעת המערכת
+        """
+        if message_container in self.login_manager.page.overlay:
+            self.login_manager.page.overlay.remove(message_container)
+            self.login_manager.page.update()        
+
+    
+    def hide_message(self):
+        """
+        מסתיר את הודעת המערכת
+        """
+        if self.message_banner:
+            self.message_banner.visible = False
+            self.login_manager.page.update()
+        
     def save_data(self):
         try:
             data = {
@@ -1456,7 +1899,7 @@ class AppManager:
                         "location": event.location,
                         "participants": [p.name for p in event.participants if p],
                         "pending_participants": [p.name for p in event.pending_participants if p],
-                        "pending_notes": {p.name: note for p, note in event.pending_notes.items() if p}
+                        "pending_notes": event.pending_notes,
                     }
                     for event in self.events
                 ],
@@ -1511,6 +1954,9 @@ class AppManager:
                     pending = next((c for c in self.contacts if c.name == pending_name), None)
                     if pending:
                         event.pending_participants.append(pending)
+                
+                # טעינת הערות
+                event.pending_notes = event_data.get("pending_notes", {})
                 
                 self.events.append(event)
 
@@ -1586,9 +2032,16 @@ class AppManager:
                 )
             ])
         )
+
+
+
+            
 # פונקציית main
 def main(page: ft.Page):
     app = AppManager()
     app.initialize_app(page)
 
-ft.app(target=main)
+ft.app(
+    target=main,
+    assets_dir="assets"  # התיקייה שבה נמצא האייקון
+)

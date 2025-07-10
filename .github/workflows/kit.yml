@@ -1,0 +1,41 @@
+name: Gemini Audio Transcription
+
+on:
+  workflow_dispatch:
+    inputs:
+      audio_file:
+        description: 'Path to audio file (e.g. audio.mp3)'
+        required: true
+        default: 'audio.mp3'
+      gemini_api_key:
+        description: 'Gemini API Key'
+        required: true
+        default: ''
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install google-generativeai
+
+      - name: Run Gemini Transcription
+        env:
+          GEMINI_API_KEY: ${{ github.event.inputs.gemini_api_key }}
+        run: |
+          python transcribe_gemini.py "${{ github.event.inputs.audio_file }}"
+
+      - name: Upload transcript
+        uses: actions/upload-artifact@v4
+        with:
+          name: transcript
+          path: transcript.txt

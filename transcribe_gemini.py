@@ -7,7 +7,7 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 audio_file = sys.argv[1]
-api_key = os.environ.get("GEMINI_API_KEY")
+api_key = os.environ.get("AIzaSyA94q9D4tADiLX0Ds557HxhG")
 
 if not api_key:
     print("GEMINI_API_KEY environment variable not set.")

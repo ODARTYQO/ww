@@ -6,7 +6,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 import os
 import time
-from google import genai
+import google.generativeai as genai
 
 # ודא שהמפתח מוגדר בסביבה או השתמש בערך ברירת מחדל
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBNnR0YAg5Q6BTCc69lMkylugx3fduRE60")

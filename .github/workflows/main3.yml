@@ -1,6 +1,7 @@
 name: Run video.py
 
 on:
+  workflow_dispatch:    # מאפשר הפעלה ידנית
   push:
     paths:
       - video.py

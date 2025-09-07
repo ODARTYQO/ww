@@ -1,7 +1,7 @@
 name: Run video.py
 
 on:
-  workflow_dispatch:    # מאפשר הפעלה ידנית
+  workflow_dispatch:
   push:
     paths:
       - video.py
@@ -29,11 +29,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if exist requirements.txt pip install -r requirements.txt
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
           pip install google-generativeai
 
       - name: Set environment variables
-        run: echo GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} >> $GITHUB_ENV
+        run: echo GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} >> $env:GITHUB_ENV
 
       - name: Run video.py
         run: python video.py

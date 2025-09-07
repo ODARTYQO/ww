@@ -1,9 +1,3 @@
-import ssl
-import urllib3
-
-ssl._create_default_https_context = ssl._create_unverified_context
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 import time
 from google import genai
 
@@ -31,11 +25,6 @@ while not operation.done:
 # Download the final video
 video = operation.response.generated_videos[0]
 
-# נסה לשמור את הווידאו לפי המבנה של האובייקט
-try:
-    video.video.save("dialogue_example.mp4")
-except AttributeError:
-    with open("dialogue_example.mp4", "wb") as f:
-        f.write(getattr(video, "content", getattr(video, "bytes", b"")))
+video.video.save("dialogue_example.mp4")
 
 print("Generated video saved to dialogue_example.mp4")

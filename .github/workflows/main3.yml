@@ -23,7 +23,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-generativeai
+          pip uninstall -y google || exit 0
+          pip install --force-reinstall --upgrade google-generativeai
 
       - name: Run video.py
         run: python video.py
